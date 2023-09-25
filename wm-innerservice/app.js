@@ -1,6 +1,6 @@
 const express = require('express');
 const { set } = require('express/lib/application');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const path = require('path');
 const app = express()
 const port = 3000
@@ -14,14 +14,14 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 const QrTimeMs = 70000;
 qrdata = {
     data: undefined,
-    ctime: Date.now(), 
+    ctime: Date.now(),
     reqServerTime: Date.now(),
     wpollre_scred: undefined,
-    QRKey:undefined,
+    QRKey: undefined,
     QrTimeMs: QrTimeMs
 }
 wmLoginData = {
-    iPlanetDirectoryPro:undefined,
+    iPlanetDirectoryPro: undefined,
     loginDate: undefined,
     wpollre_scred: undefined,
     scriptReqTimes: 0,
@@ -29,82 +29,77 @@ wmLoginData = {
 }
 
 rndCode = {
-    code:undefined,
+    code: undefined,
     ctime: undefined,
     reqServerTime: undefined
 }
 
-function genCode(n)
-{
+function genCode(n) {
     let code = '';
     const p = '0123456789';
-    for(let i = 0; i < n; i++)
-    {
+    for (let i = 0; i < n; i++) {
         const ix = Math.floor(Math.random() * p.length);
         code += p.charAt(ix);
     }
     return code;
 }
 
-function getCookie(s, key)
-{
+function getCookie(s, key) {
     const ix = s.indexOf(key);
     const ix2 = s.indexOf(';', ix + key.length);
     return s.substring(ix + key.length, ix2);
 }
 
-function genQrCode()
-{
+const request = require('request');
+
+function genQrCode() {
+    qrdata.ctime = Date.now();
+    const url = `https://qr.sec.wanmei.net:20176/qrservice/v1.0/show?t=${qrdata.ctime}&rcode=${genCode(6)}`;
     try{
-        (async ()=>{
-            qrdata.ctime = Date.now();
-            const res2 = await fetch(`https://qr.sec.wanmei.net:20176/qrservice/v1.0/show?t=${qrdata.ctime}&rcode=${genCode(6)}`);
-            const data = await res2.json();
-            qrdata.data = data;
-            const sck = res2.headers.get('Set-Cookie');
-            qrdata.wpollre_scred = getCookie(sck, 'wpollre_scred=');
-            qrdata.QRKey = getCookie(sck, 'QRKey=');
-        })();
-    }catch(err)
+        request(url, { json: true }, (err, res, body) => {
+            if (err) {
+                console.log(`fetch ${url} err: ${err}`);
+            } else {
+                qrdata.data = body;
+                const sck = res.headers["set-cookie"].join(';');
+                qrdata.wpollre_scred = getCookie(sck, 'wpollre_scred=');
+                qrdata.QRKey = getCookie(sck, 'QRKey=');
+            }
+        });
+    }catch(reqErr)
     {
-        console.log(`gen Qrcode error: ${err}`);
-    }finally{
-        // process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 1;
+        console.log(`req ${url} err: ${reqErr}}`);
     }
 }
 
 
-function wmLogin(code)
-{
-    if(qrdata.wpollre_scred != undefined && code == rndCode.code && code !== undefined || wmLoginData.wpollre_scred != qrdata.wpollre_scred)
-    {
+function wmLogin(code) {
+    if (qrdata.wpollre_scred != undefined && code == rndCode.code && code !== undefined || wmLoginData.wpollre_scred != qrdata.wpollre_scred) {
         const url = `https://qr.sec.wanmei.net:20176/qrservice/v1.0/check?t=${Date.now()}&token=${qrdata.wpollre_scred}`;
-        try{
-            (async ()=>{
-                const res = await fetch(url, {headers: {
-                    cookie: `QRKey=${qrdata.QRKey}; ec=HQvIykdU-1691475000578-14282591e3edd-819412952; i18next=cn;wpollre_scred=${qrdata.wpollre_scred}; _efmdata=7Az08O31SuuPpgdBEDMA%2BkgYB7mktxYXPEoOx6WOvJPWJq2mH3oz0FJvMLE0Xt0L555%2BcTH6vXJUaLAaWlqfZQ%3D%3D; _exid=iTqBJJm905s7IAF5xQkj6aIGQT5yerUKIp3FnlbiO8A%3D`
-                }});
+        try {
+            (async () => {
+                const res = await fetch(url, {
+                    headers: {
+                        cookie: `QRKey=${qrdata.QRKey}; ec=HQvIykdU-1691475000578-14282591e3edd-819412952; i18next=cn;wpollre_scred=${qrdata.wpollre_scred}; _efmdata=7Az08O31SuuPpgdBEDMA%2BkgYB7mktxYXPEoOx6WOvJPWJq2mH3oz0FJvMLE0Xt0L555%2BcTH6vXJUaLAaWlqfZQ%3D%3D; _exid=iTqBJJm905s7IAF5xQkj6aIGQT5yerUKIp3FnlbiO8A%3D`
+                    }
+                });
                 const data = await res.json();
-                if(res.status == 200 && data.status == 200)
-                {
-                    wmLoginData.loginDate= Date.now();
+                if (res.status == 200 && data.status == 200) {
+                    wmLoginData.loginDate = Date.now();
                     wmLoginData.iPlanetDirectoryPro = data.tokenId;
                     wmLoginData.wpollre_scred = qrdata.wpollre_scred;
-                }else{
+                } else {
                     wmLoginData.iPlanetDirectoryPro = undefined;
                 }
             })();
-        }catch(err)
-        {
+        } catch (err) {
             console.log(`wmLogin error: ${err}`);
         }
     }
 }
 
-function genRndCode()
-{
-    if(rndCode.ctime == undefined || Date.now() - rndCode.ctime > QrTimeMs)
-    {
+function genRndCode() {
+    if (rndCode.ctime == undefined || Date.now() - rndCode.ctime > QrTimeMs) {
         rndCode.code = genCode(4);
         rndCode.ctime = Date.now();
     }
@@ -125,51 +120,46 @@ app.get('/', (req, res) => {
 
 app.get('/secredCode', (req, res) => {
     genRndCode();
-    res.render('rndcode', {code: rndCode.code});
+    res.render('rndcode', { code: rndCode.code });
 })
 
-app.get("/qrcode", (req, res)=>{
+app.get("/qrcode", (req, res) => {
     qrdata.reqServerTime = Date.now();
     return res.json(qrdata);
 })
 
-app.get("/rndcode", (req, res)=>{
+app.get("/rndcode", (req, res) => {
     genRndCode();
     return res.json(rndCode);
 })
 
-app.post("/login", (req, res)=>{
-    if(req.query.code != rndCode.code)
-    {
+app.post("/login", (req, res) => {
+    if (req.query.code != rndCode.code) {
         res.send('code not correct:)');
     }
     wmLogin(req.query.code);
     res.send('ok!!!');
 })
 
-app.get("/login", (req, res)=>{
-    if(req.query.scriptReqTimes != undefined)
-    {
+app.get("/login", (req, res) => {
+    if (req.query.scriptReqTimes != undefined) {
         wmLoginData.scriptReqTimes += 1;
     }
     return res.json(wmLoginData);
 })
 
-function getBeijingDate()
-{
-    return new Date(Date.now() + 8* 3600 * 1000);
+function getBeijingDate() {
+    return new Date(Date.now() + 8 * 3600 * 1000);
 }
 
-app.get("/logout", (req, res)=>{
-    if(req.query.scriptReqTimes != undefined)
-    {
+app.get("/logout", (req, res) => {
+    if (req.query.scriptReqTimes != undefined) {
         wmLoginData.logoutReqTimes += 1;
     }
     const d = getBeijingDate();
-    if(d.getHours() >= 18 && d.getHours() <= 23)
-    {
+    if (d.getHours() >= 18 && d.getHours() <= 23) {
         return res.json(wmLoginData);
-    }else{
+    } else {
         return res.json({});
     }
 })
@@ -178,6 +168,6 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 
 
 app.listen(port, () => {
-  console.log(`wms listening on port ${port}`)
-  genQrCode();
+    console.log(`wms listening on port ${port}`)
+    genQrCode();
 })
