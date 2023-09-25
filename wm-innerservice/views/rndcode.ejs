@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>View Engine Demo</title>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+</head>
+
+<body>
+
+    <div style="position: absolute;
+    left: 50%;
+    top: 50%;
+   width:200px;
+   height:100px;
+   margin-left:-100px;
+   margin-top:-50px;">
+        <!-- The text field -->
+        <input type="text" value="<%= code %>" id="myInput">
+        <!-- The button used to copy the text -->
+        <button onclick="myFunction()">Copy text</button>
+    </div>
+
+
+    <script>
+        function myFunction() {
+            // Get the text field
+            let copyText = document.getElementById("myInput");
+
+            // Select the text field
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(copyText.value);
+        }
+
+        var _rndcode = undefined;
+        const IP = '144.202.96.200:3000';
+        const _interval = setInterval(() => {
+            $.ajax({
+                url: `http://${IP}/rndcode`,
+                success: function (data) {
+                    if (_rndcode == undefined || data.code != _rndcode.code) {
+                        _rndcode = data;
+                        console.log(`update code ${_rndcode}`);
+                    }
+                }
+            });
+            //
+            if (_rndcode != undefined) {
+                let copyText = document.getElementById("myInput");
+                copyText.value = _rndcode.code;
+            }
+        }, 1000);
+
+    </script>
+</body>
+
+</html>

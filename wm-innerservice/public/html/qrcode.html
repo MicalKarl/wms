@@ -1,0 +1,113 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN" lang="zh-CN">
+
+<head>
+	<title>WMS QRCode</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+	<!-- <link href="/static/css/timer.css" rel="stylesheet"/> -->
+	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/js/qrcode.js"></script>
+
+</head>
+
+<body>
+	<input id="text" type="text" value="" style="width:80%" /><br />
+	<div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div>
+	<p id="qrtimer"></p>
+	<p id="login-status"></p>
+	<button type="button" onclick="wmLogin()">Login</button>
+
+	<script type="text/javascript">
+		var qrcode = new QRCode(document.getElementById("qrcode"), {
+			width: 200,
+			height: 200
+		});
+
+		var _qrdata = undefined;
+		const IP = '144.202.96.200:3000';
+		const QRURL = `http://${IP}/qrcode`;
+		const LOGIN_URL = `http://${IP}/login`;
+		const LOGIN_QUERY_URL = `http://${IP}/login`;
+
+		function wmLogin() {
+			var elText = document.getElementById("text");
+			$.ajax({
+				url: LOGIN_URL + `?code=${elText.value.trim()}`,
+				type: "post",
+				success: function (data) {
+					alert(`login success with ${data}`);
+				}
+			})
+			console.log(`wm login ${elText.value.trim()}`);
+		}
+
+		function makeCode() {
+			if (_qrdata != undefined) {
+				qrcode.makeCode(_qrdata.data.qrcontent);
+			}
+		}
+
+		function ajaxMadeCode() {
+			$.ajax({
+				url: QRURL,
+				success: function (data) {
+					if (_qrdata == undefined || data.data.qrcontent != _qrdata.data.qrcontent) {
+						// _qrCode = data.data.qrcontent;
+						_qrdata = data;
+						console.log(`refresh qrcode ${_qrdata.data.qrcontent} at ${new Date()}`);
+					}
+					makeCode();
+				}
+			});
+		}
+
+		ajaxMadeCode();
+		setInterval(() => {
+			ajaxMadeCode();
+		}, 1000);
+
+		$("#text").
+			on("blur", function () {
+				makeCode();
+			}).
+			on("keydown", function (e) {
+				if (e.keyCode == 13) {
+					makeCode();
+				}
+			});
+	</script>
+
+	<script>
+		// https://www.w3schools.com/howto/howto_js_countdown.asp
+		var timerQrCount = setInterval(function () {
+			if (_qrdata == undefined) {
+				document.getElementById("qrtimer").innerHTML = "next fresh time: undefined";
+			} else {
+				let t = (_qrdata.QrTimeMs - (Date.now() - _qrdata.ctime)) / 1000;
+				if (t <= 0) {
+					t = 0;
+					ajaxMadeCode();
+				}
+				document.getElementById("qrtimer").innerHTML = `"next fresh time: ${t}s"`;
+			}
+		}, 1000);
+
+		// 
+		var _login_status = undefined;
+		const _lgStatusInterval = setInterval(function () {
+			$.ajax({
+				url: LOGIN_QUERY_URL,
+				success: function (data) {
+					if (data != undefined) {
+						_login_status = data;
+					}
+				}
+			});
+			if (_login_status != undefined) {
+				document.getElementById("login-status").innerHTML = `login: ${_login_status.scriptReqTimes}, logout: ${_login_status.logoutReqTimes} token: ${_login_status.iPlanetDirectoryPro}`;
+			}
+		}, 1000);
+	</script>
+</body>
