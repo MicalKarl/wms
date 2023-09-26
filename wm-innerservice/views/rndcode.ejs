@@ -42,14 +42,14 @@
             // Draw background circle
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            ctx.strokeStyle = "#ddd";
+            ctx.strokeStyle = `hsl(${120 * (1 - percentage)}, 100%, 50%)`; // Interpolate color from green to red
             ctx.lineWidth = 50;
             ctx.stroke();
 
             // Draw progress circle
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, -0.5 * Math.PI, (-0.5 + 2 * percentage) * Math.PI);
-            ctx.strokeStyle = `hsl(${120 * (1 - percentage)}, 100%, 50%)`; // Interpolate color from green to red
+            ctx.strokeStyle = "#ffffff"
             ctx.lineWidth = 50;
             ctx.stroke();
         }

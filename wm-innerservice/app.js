@@ -4,7 +4,7 @@ const path = require('path');
 const app = express()
 const port = 3000
 var cors = require('cors')
-const axios = require('axios/dist/node/axios.cjs')
+const axios = require('axios');
 app.use(cors()) // Use this after the variable declaration
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, "views"));
