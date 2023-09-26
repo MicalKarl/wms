@@ -9,31 +9,50 @@
 	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/static/js/qrcode.js"></script>
 	<style>
-		body,
-		html {
-			height: 100%;
+		body {
 			margin: 0;
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
 
-		.my_container {
+		.container {
 			display: flex;
-			justify-content: start;
-			align-items: start;
-			height: auto;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		.item {
+			margin-top: 15px;
 		}
 	</style>
 </head>
 
 <body>
-	<input id="text" type="text" value="" style="width:80%;margin-top:50px;" /><br />
-	<div class="my_container">
-		<div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div>
-		<canvas id="percentageCircle" width="200" height="200" style="margin-top:15px;"></canvas>
-	</div>
 
-	<p id="login-status"></p>
-	<button type="button" onclick="wmLogin()">Login</button>
-	<p id="servertime">undefined</p>
+	<div class="my_container">
+		<div class="item">
+			<p id="servertime">undefined</p>
+		</div>
+		<div class="item">
+			<input id="text" type="text" value="" /><br />
+			<button type="button" onclick="wmLogin()">Login</button>
+		</div>
+		<div class="item">
+			<div id="qrcode" style="width:200px; height:200px;"></div>
+		</div>
+		<div class="item">
+			<p id="login-count"></p>
+			<p id="logout-count"></p>
+			<p id="wmtoken"></p>
+		</div>
+		<div class="item">
+			<canvas id="percentageCircle" width="200" height="200"></canvas>
+		</div>
+	</div>
 
 	<script type="text/javascript">
 		var qrcode = new QRCode(document.getElementById("qrcode"), {
@@ -59,7 +78,7 @@
 
 			// Draw progress circle
 			ctx.beginPath();
-			ctx.arc(centerX, centerY, radius, -0.5 * Math.PI, (-0.5 + 2 * percentage) * Math.PI);
+			ctx.arc(centerX, centerY, radius + 1, -0.5 * Math.PI, (-0.5 + 2 * percentage) * Math.PI);
 			ctx.strokeStyle = "#ffffff"
 			ctx.lineWidth = 100;
 			ctx.stroke();
@@ -95,7 +114,6 @@
 				url: QRURL,
 				success: function (data) {
 					if (_qrdata == undefined || data.data.qrcontent != _qrdata.data.qrcontent) {
-						// _qrCode = data.data.qrcontent;
 						_qrdata = data;
 						console.log(`refresh qrcode ${_qrdata.data.qrcontent} at ${new Date()}`);
 					}
@@ -108,88 +126,9 @@
 		setInterval(() => {
 			ajaxMadeCode();
 		}, 1000);
-
-		$("#text").
-			on("blur", function () {
-				makeCode();
-			}).
-			on("keydown", function (e) {
-				if (e.keyCode == 13) {
-					makeCode();
-				}
-			});
 	</script>
 
 	<script>
-
-		function rgbToHsl(r, g, b) {
-			r /= 255, g /= 255, b /= 255;
-			const max = Math.max(r, g, b), min = Math.min(r, g, b);
-			let h, s, l = (max + min) / 2;
-
-			if (max == min) {
-				h = s = 0;
-			} else {
-				const d = max - min;
-				s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-				switch (max) {
-					case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-					case g: h = (b - r) / d + 2; break;
-					case b: h = (r - g) / d + 4; break;
-				}
-				h /= 6;
-			}
-
-			return [h, s, l];
-		}
-
-		function hslToRgb(h, s, l) {
-			let r, g, b;
-
-			if (s == 0) {
-				r = g = b = l;
-			} else {
-				const hue2rgb = (p, q, t) => {
-					if (t < 0) t += 1;
-					if (t > 1) t -= 1;
-					if (t < 1 / 6) return p + (q - p) * 6 * t;
-					if (t < 1 / 2) return q;
-					if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-					return p;
-				};
-
-				const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-				const p = 2 * l - q;
-				r = hue2rgb(p, q, h + 1 / 3);
-				g = hue2rgb(p, q, h);
-				b = hue2rgb(p, q, h - 1 / 3);
-			}
-
-			return [r * 255, g * 255, b * 255];
-		}
-
-		function lerp(a, b, t) {
-			return a + (b - a) * t;
-		}
-
-		function lerpColor(color1, color2, t) {
-			const hsl1 = rgbToHsl(...color1);
-			const hsl2 = rgbToHsl(...color2);
-
-			const h = lerp(hsl1[0], hsl2[0], t);
-			const s = lerp(hsl1[1], hsl2[1], t);
-			const l = lerp(hsl1[2], hsl2[2], t);
-
-			return hslToRgb(h, s, l);
-		}
-
-		function rgbToHex(rgb) {
-			return '#' + rgb.map(x => {
-				const hex = x.toString(16);
-				return hex.length === 1 ? '0' + hex : hex;
-			}).join('');
-		}
-
 		function updateCircle(percent) {
 			drawCircle(percent);
 		}
@@ -223,10 +162,10 @@
 			$.ajax({
 				url: SERVER_TIME_URL,
 				success: function (data) {
-					document.getElementById("servertime").innerHTML = getServerTime(data);
+					$("#servertime").text(getServerTime(data));
 				},
 				error: function (xhr, textStatus, err) {
-					document.getElementById("servertime").innerHTML = "failed to connect server";
+					$("#servertime").text("failed to connect server");
 				}
 			});
 		}, 100);
@@ -243,7 +182,9 @@
 				}
 			});
 			if (_login_status != undefined) {
-				document.getElementById("login-status").innerHTML = `login: ${_login_status.scriptReqTimes}<br> logout: ${_login_status.logoutReqTimes}<br> token: ${_login_status.iPlanetDirectoryPro}`;
+				$("#login-count").text(`login:  ${_login_status.scriptReqTimes}`);
+				$("#logout-count").text(`logout: ${_login_status.logoutReqTimes}`);
+				$("#wmtoken").text(`token:  ${_login_status.iPlanetDirectoryPro}`);
 			}
 		}, 1000);
 	</script>
