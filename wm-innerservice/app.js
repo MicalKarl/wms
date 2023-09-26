@@ -90,7 +90,7 @@ function wmLogin(code) {
     }
 }
 
-function genRndCode(force=false) {
+function genRndCode(force = false) {
     if (force || rndCode.ctime == undefined || Date.now() - rndCode.ctime > QrTimeMs) {
         rndCode.code = genCode(4);
         rndCode.ctime = Date.now();
@@ -142,8 +142,9 @@ app.get("/login", (req, res) => {
     return res.json(wmLoginData);
 })
 
+const { utcToZonedTime } = require('date-fns-tz');
 function getBeijingDate() {
-    return new Date(Date.now() + 8 * 3600 * 1000);
+    return utcToZonedTime(new Date(), 'Asia/Shanghai');
 }
 
 app.get("/logout", (req, res) => {
