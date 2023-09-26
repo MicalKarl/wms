@@ -4,25 +4,56 @@
 <head>
     <title>View Engine Demo</title>
     <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+        }
+
+        .ca_container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
 </head>
 
 <body>
-
-    <div style="position: absolute;
-    left: 50%;
-    top: 50%;
-   width:200px;
-   height:100px;
-   margin-left:-100px;
-   margin-top:-50px;">
+    <div class="ca_container">
         <!-- The text field -->
         <input type="text" value="<%= code %>" id="myInput">
         <!-- The button used to copy the text -->
         <button onclick="myFunction()">Copy text</button>
+        <canvas id="percentageCircle" width="100" height="100"></canvas>
     </div>
 
-
     <script>
+        const canvas = document.getElementById("percentageCircle");
+        const ctx = canvas.getContext("2d");
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 25;
+
+        function drawCircle(percentage) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#ddd";
+            ctx.lineWidth = 50;
+            ctx.stroke();
+
+            // Draw progress circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, -0.5 * Math.PI, (-0.5 + 2 * percentage) * Math.PI);
+            ctx.strokeStyle = `hsl(${120 * (1 - percentage)}, 100%, 50%)`; // Interpolate color from green to red
+            ctx.lineWidth = 50;
+            ctx.stroke();
+        }
+
         function myFunction() {
             // Get the text field
             let copyText = document.getElementById("myInput");
@@ -36,8 +67,8 @@
         }
 
         var _rndcode = undefined;
-        const IP = '144.202.96.200:3000';
-        const _interval = setInterval(() => {
+        const IP = 'wms.myawesome.top:3000';
+        setInterval(() => {
             $.ajax({
                 url: `http://${IP}/rndcode`,
                 success: function (data) {
@@ -51,8 +82,12 @@
             if (_rndcode != undefined) {
                 let copyText = document.getElementById("myInput");
                 copyText.value = _rndcode.code;
+                const percent = (Date.now() - _rndcode.ctime) / (_rndcode.nextUpdateTime - _rndcode.ctime);
+                drawCircle(percent > 1.0 ? 1.0 : percent);
+            } else {
+                drawCircle(1.0);
             }
-        }, 1000);
+        }, 100);
 
     </script>
 </body>
