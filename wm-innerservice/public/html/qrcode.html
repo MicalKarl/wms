@@ -114,7 +114,7 @@
 			$.ajax({
 				url: QRURL,
 				success: function (data) {
-					if (_qrdata == undefined || data.data.qrcontent != _qrdata.data.qrcontent) {
+					if (_qrdata == undefined || _qrdata.data == undefined || data.data.qrcontent != _qrdata.data.qrcontent) {
 						_qrdata = data;
 						console.log(`refresh qrcode ${_qrdata.data.qrcontent} at ${new Date()}`);
 					}
