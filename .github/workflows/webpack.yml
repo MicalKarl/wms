@@ -25,5 +25,6 @@ jobs:
     - name: Build
       run: |
         cd /home/runner/work/wms/wms/wm-innerservice
+        npm install webpack webpack-cli
         npm install
         npx webpack
