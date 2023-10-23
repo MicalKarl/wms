@@ -21,9 +21,9 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+        args: deploy --dir=app/public --prod
 
     - name: Build
       run: |
-        cd /home/runner/work/wms/wms
         npm install
         npx webpack
