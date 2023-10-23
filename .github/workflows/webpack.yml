@@ -27,5 +27,5 @@ jobs:
         cd /home/runner/work/wms/wms/wm-innerservice
         npm install
         echo "yes"
-        npm install -D webpack-cli
-        npx webpack
+        npm install -D webpack webpack-cli
+        npx webpack --mode development
