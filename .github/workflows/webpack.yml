@@ -26,4 +26,5 @@ jobs:
       run: |
         cd /home/runner/work/wms/wms/wm-innerservice
         npm install
+        echo "yes"
         npx webpack
