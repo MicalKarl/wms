@@ -24,5 +24,6 @@ jobs:
 
     - name: Build
       run: |
+        cd /home/runner/work/wms/wms
         npm install
         npx webpack
