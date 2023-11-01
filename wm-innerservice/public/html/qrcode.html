@@ -86,11 +86,11 @@
 		}
 
 		var _qrdata = undefined;
-		const IP = 'wms.myawesome.top:3000';
-		const QRURL = `http://${IP}/qrcode`;
-		const LOGIN_URL = `http://${IP}/login`;
-		const LOGIN_QUERY_URL = `http://${IP}/login`;
-		const SERVER_TIME_URL = `http://${IP}/runtime`;
+		const MyDomain = 'wms.myawesome.top';
+		const QRURL = `https://${MyDomain}/qrcode`;
+		const LOGIN_URL = `https://${MyDomain}/login`;
+		const LOGIN_QUERY_URL = `https://${MyDomain}/login`;
+		const SERVER_TIME_URL = `https://${MyDomain}/runtime`;
 
 		function wmLogin() {
 			var elText = document.getElementById("text");

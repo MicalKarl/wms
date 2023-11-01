@@ -79,10 +79,10 @@
         }
 
         var _rndcode = undefined;
-        const IP = 'wms.myawesome.top:3000';
+        const MyDomain = 'wms.myawesome.top';
         setInterval(() => {
             $.ajax({
-                url: `http://${IP}/rndcode`,
+                url: `https://${MyDomain}/rndcode`,
                 success: function (data) {
                     if (_rndcode == undefined || data.code != _rndcode.code) {
                         _rndcode = data;
