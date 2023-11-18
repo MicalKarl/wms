@@ -79,7 +79,7 @@
         }
 
         var _rndcode = undefined;
-        const MyDomain = 'wms.myawesome.top';
+        const MyDomain = `${window.location.hostname}`;
         setInterval(() => {
             $.ajax({
                 url: `https://${MyDomain}/rndcode`,
